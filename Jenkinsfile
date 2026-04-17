@@ -12,20 +12,12 @@ pipeline {
                 checkout scm
             }
         }
-        stage('DEBUG WORKSPACE') {
-    steps {
-        bat 'cd'
-        bat 'dir'
-        bat 'dir Jenkins-Terraform'
-        bat 'dir Jenkins-Terraform\\lambda'
-    }
-}
 
         stage('Detect Lambda Folders') {
             steps {
                 script {
                     def output = bat(
-                        script: 'if exist Jenkins-Terraform\\lambda (dir /b Jenkins-Terraform\\lambda) else (echo NO_LAMBDA_DIR)',
+                        script: 'if exist lambda (dir /b lambda) else (echo NO_LAMBDA_DIR)',
                         returnStdout: true
                     ).trim()
 
@@ -50,7 +42,7 @@ pipeline {
                     def dirs = env.LAMBDA_DIRS.split(',')
 
                     for (d in dirs) {
-                        dir("Jenkins-Terraform/lambda/${d}") {
+                        dir("lambda/${d}") {
                             echo "Building lambda: ${d}"
 
                             bat """

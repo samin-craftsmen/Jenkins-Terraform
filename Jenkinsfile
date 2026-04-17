@@ -9,24 +9,30 @@ pipeline {
     stages {
 
 
-       stage('Detect Lambda Folders') {
+      stage('Detect Lambda Folders') {
     steps {
         script {
-
-            bat 'dir'
 
             def output = bat(
                 script: 'dir /b lambda',
                 returnStdout: true
             ).trim()
 
-            echo "RAW OUTPUT: ${output}"
+            echo "RAW OUTPUT:\n${output}"
 
             if (!output || output.contains("File Not Found")) {
                 echo "No lambda folders found"
                 env.LAMBDA_DIRS = ""
             } else {
-                env.LAMBDA_DIRS = output.replace("\r\n", ",")
+
+                def dirs = output
+                    .split("\\r?\\n")
+                    .collect { it.trim() }
+                    .findAll { it.length() > 0 }
+
+                echo "Clean directories: ${dirs}"
+
+                env.LAMBDA_DIRS = dirs.join(',')
                 echo "Detected lambda folders: ${env.LAMBDA_DIRS}"
             }
         }

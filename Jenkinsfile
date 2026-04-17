@@ -9,35 +9,31 @@ pipeline {
     stages {
 
 
-      stage('Detect Lambda Folders') {
-    steps {
-        script {
+        stage('Detect Lambda Folders') {
+            steps {
+                script {
+                    def lambdaRoot = 'lambda'
+                    def output = bat(
+                        script: '@echo off
+if exist lambda (dir /b /ad lambda) else (echo NO_LAMBDA_DIR)',
+                        returnStdout: true
+                    ).trim()
 
-            def output = bat(
-                script: 'dir /b lambda',
-                returnStdout: true
-            ).trim()
+                    def dirs = output
+                        .split("\\r?\\n")
+                        .collect { it.trim() }
+                        .findAll { it.length() > 0 && it != 'NO_LAMBDA_DIR' && !it.contains('>') }
 
-            echo "RAW OUTPUT:\n${output}"
-
-            if (!output || output.contains("File Not Found")) {
-                echo "No lambda folders found"
-                env.LAMBDA_DIRS = ""
-            } else {
-
-                def dirs = output
-                    .split("\\r?\\n")
-                    .collect { it.trim() }
-                    .findAll { it.length() > 0 }
-
-                echo "Clean directories: ${dirs}"
-
-                env.LAMBDA_DIRS = dirs.join(',')
-                echo "Detected lambda folders: ${env.LAMBDA_DIRS}"
+                    if (dirs.isEmpty()) {
+                        echo "No lambda folders found under ${lambdaRoot}/"
+                        env.LAMBDA_DIRS = ''
+                    } else {
+                        env.LAMBDA_DIRS = dirs.join(',')
+                        echo "Detected lambda folders: ${env.LAMBDA_DIRS}"
+                    }
+                }
             }
         }
-    }
-}
 
         stage('Build & Zip Lambdas') {
             when {
@@ -48,7 +44,7 @@ pipeline {
                     def dirs = env.LAMBDA_DIRS.split(',')
 
                     for (d in dirs) {
-                        dir("lambda/${d}") {
+                        dir("lambda/${d.trim()}") {
                             echo "Building lambda: ${d}"
 
                             bat """

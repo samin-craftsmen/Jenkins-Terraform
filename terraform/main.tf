@@ -43,7 +43,7 @@ resource "aws_lambda_function" "functions" {
   timeout       = 15
   memory_size   = 128
 
-  filename         = "${path.module}/../lambda/${each.value}/function.zip"
+  filename = "${path.module}/../Jenkins-Terraform/lambda/${each.value}/function.zip"
   source_code_hash = filebase64sha256("${path.module}/../lambda/${each.value}/function.zip")
 
   depends_on = [aws_iam_role_policy_attachment.basic_execution]

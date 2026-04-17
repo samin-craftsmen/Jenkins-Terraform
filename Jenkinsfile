@@ -12,6 +12,14 @@ pipeline {
                 checkout scm
             }
         }
+        stage('DEBUG WORKSPACE') {
+    steps {
+        bat 'cd'
+        bat 'dir'
+        bat 'dir Jenkins-Terraform'
+        bat 'dir Jenkins-Terraform\\lambda'
+    }
+}
 
         stage('Detect Lambda Folders') {
             steps {

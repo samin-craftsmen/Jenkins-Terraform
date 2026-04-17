@@ -14,8 +14,8 @@ pipeline {
                 script {
                     def lambdaRoot = 'lambda'
                     def output = bat(
-                        script: '@echo off
-if exist lambda (dir /b /ad lambda) else (echo NO_LAMBDA_DIR)',
+                        script: '''@echo off
+if exist lambda (dir /b /ad lambda) else (echo NO_LAMBDA_DIR)''',
                         returnStdout: true
                     ).trim()
 

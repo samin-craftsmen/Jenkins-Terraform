@@ -16,14 +16,14 @@ pipeline {
             bat 'dir'
 
             def output = bat(
-                script: 'dir /b Jenkins-Terraform\\lambda',
+                script: 'dir /b lambda',
                 returnStdout: true
             ).trim()
 
             echo "RAW OUTPUT: ${output}"
 
             if (!output || output.contains("File Not Found")) {
-                echo "No lambda folders found. Skipping pipeline."
+                echo "No lambda folders found"
                 env.LAMBDA_DIRS = ""
             } else {
                 env.LAMBDA_DIRS = output.replace("\r\n", ",")

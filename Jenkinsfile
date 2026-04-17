@@ -1,3 +1,4 @@
+echo "🔥 JENKINSFILE IS EXECUTING"
 pipeline {
     agent any
 

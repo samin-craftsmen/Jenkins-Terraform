@@ -9,25 +9,29 @@ pipeline {
     stages {
 
 
-        stage('Detect Lambda Folders') {
-            steps {
-                script {
-                    def output = bat(
-                        script: 'if exist lambda (dir /b lambda) else (echo NO_LAMBDA_DIR)',
-                        returnStdout: true
-                    ).trim()
+       stage('Detect Lambda Folders') {
+    steps {
+        script {
 
-                    if (!output || output.contains("NO_LAMBDA_DIR")) {
-                        echo "No lambda folders found. Skipping pipeline."
-                        env.LAMBDA_DIRS = ""
-                    } else {
-                        def dirs = output.split("\\r?\\n")
-                        env.LAMBDA_DIRS = dirs.join(',')
-                        echo "Detected lambda folders: ${env.LAMBDA_DIRS}"
-                    }
-                }
+            bat 'dir'
+
+            def output = bat(
+                script: 'dir /b Jenkins-Terraform\\lambda',
+                returnStdout: true
+            ).trim()
+
+            echo "RAW OUTPUT: ${output}"
+
+            if (!output || output.contains("File Not Found")) {
+                echo "No lambda folders found. Skipping pipeline."
+                env.LAMBDA_DIRS = ""
+            } else {
+                env.LAMBDA_DIRS = output.replace("\r\n", ",")
+                echo "Detected lambda folders: ${env.LAMBDA_DIRS}"
             }
         }
+    }
+}
 
         stage('Build & Zip Lambdas') {
             when {

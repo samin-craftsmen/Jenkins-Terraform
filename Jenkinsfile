@@ -2,10 +2,11 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'us-east-1'
+        AWS_REGION = 'ap-south-1'
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -15,18 +16,19 @@ pipeline {
         stage('Detect Lambda Folders') {
             steps {
                 script {
-                    def lambdaDirs = []
-                    def lambdaRoot = "${env.WORKSPACE}/lambda"
-                    def rootDir = new File(lambdaRoot)
-                    if (rootDir.exists()) {
-                        rootDir.eachDir { dir ->
-                            lambdaDirs.add(dir.name)
-                        }
+                    def output = bat(
+                        script: 'if exist lambda (dir /b lambda) else (echo NO_LAMBDA_DIR)',
+                        returnStdout: true
+                    ).trim()
+
+                    if (!output || output.contains("NO_LAMBDA_DIR")) {
+                        echo "No lambda folders found under lambda/. Skipping pipeline."
+                        env.LAMBDA_DIRS = ""
+                    } else {
+                        def dirs = output.split("\\r?\\n")
+                        env.LAMBDA_DIRS = dirs.join(',')
+                        echo "Detected lambda folders: ${env.LAMBDA_DIRS}"
                     }
-                    if (lambdaDirs.isEmpty()) {
-                        echo "No lambda folders found under lambda/. Skipping build."
-                    }
-                    env.LAMBDA_DIRS = lambdaDirs.join(',')
                 }
             }
         }
@@ -38,18 +40,23 @@ pipeline {
             steps {
                 script {
                     def dirs = env.LAMBDA_DIRS.split(',')
+
                     for (d in dirs) {
                         dir("lambda/${d}") {
                             echo "Building lambda: ${d}"
+
                             bat """
                                 set GOOS=linux
                                 set GOARCH=amd64
                                 set CGO_ENABLED=0
                                 go build -tags lambda.norpc -o bootstrap .
                             """
+
                             bat """
+                                if exist function.zip del function.zip
                                 tar -a -cf function.zip bootstrap
                             """
+
                             bat "del bootstrap"
                         }
                     }

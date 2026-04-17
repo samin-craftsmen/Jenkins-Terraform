@@ -17,12 +17,12 @@ pipeline {
             steps {
                 script {
                     def output = bat(
-                        script: 'if exist lambda (dir /b lambda) else (echo NO_LAMBDA_DIR)',
+                        script: 'if exist Jenkins-Terraform\\lambda (dir /b Jenkins-Terraform\\lambda) else (echo NO_LAMBDA_DIR)',
                         returnStdout: true
                     ).trim()
 
                     if (!output || output.contains("NO_LAMBDA_DIR")) {
-                        echo "No lambda folders found under lambda/. Skipping pipeline."
+                        echo "No lambda folders found. Skipping pipeline."
                         env.LAMBDA_DIRS = ""
                     } else {
                         def dirs = output.split("\\r?\\n")
@@ -42,7 +42,7 @@ pipeline {
                     def dirs = env.LAMBDA_DIRS.split(',')
 
                     for (d in dirs) {
-                        dir("lambda/${d}") {
+                        dir("Jenkins-Terraform/lambda/${d}") {
                             echo "Building lambda: ${d}"
 
                             bat """
